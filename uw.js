@@ -1,4 +1,4 @@
-var lightwallet = require("eth-lightwallet");
+var lightwallet = require("vap-lightwallet");
 
 if (!process.argv[3]) {
 	console.log('Usage: ' + process.argv[1] + ' <walletfilename> <password>');

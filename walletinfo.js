@@ -1,4 +1,4 @@
-var lightwallet = require('eth-lightwallet');
+var lightwallet = require('vap-lightwallet');
 var fs = require('fs');
 
 if (!process.argv[2] || !process.argv[3]) {

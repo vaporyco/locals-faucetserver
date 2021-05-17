@@ -19,11 +19,11 @@
     .btc--section h5 {
         font-size: 30px;
     }
-    .eth--section {
+    .vap--section {
         text-align: center;
         border-right: 1px solid #DAE1E9;
     }
-    .eth--section h5 {
+    .vap--section h5 {
         font-size: 30px;
     }
     .ltc--section {
@@ -33,7 +33,7 @@
         font-size: 30px;
     }
     @media (max-width: 480px) {
-        .eth--section {
+        .vap--section {
             border-right: none;
         }
         .btc--section {

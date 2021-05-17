@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "./FaucetRequest.css";
-import Eth from "ethjs";
+import Vap from "vapjs";
 import config from "react-global-configuration";
 import axios from "axios";
 import timespan from "timespan";
@@ -25,7 +25,7 @@ class FaucetRequest extends Component {
 
   handleSubmit(event) {
     this.clearMessages();
-    if (Eth.isAddress(this.state.targetAccount)) {
+    if (Vap.isAddress(this.state.targetAccount)) {
       this.setState({ requestrunning: true });
 
       let apiUrl = config.get("apiurl") + "/donate/" + this.state.targetAccount;
@@ -39,8 +39,8 @@ class FaucetRequest extends Component {
                 address: response.data.address,
                 amount: response.data.amount,
                 txhash: response.data.txhash,
-                etherscanlink:
-                  config.get("etherscanroot") + "/tx/" + response.data.txhash
+                vaporscanlink:
+                  config.get("vaporscanroot") + "/tx/" + response.data.txhash
               }
             });
             return;
@@ -79,7 +79,7 @@ class FaucetRequest extends Component {
     window.addEventListener("load", () => {
       // See if there is a pubkey on the URL
       let urlTail = window.location.search.substring(1);
-      if (Eth.isAddress(urlTail)){
+      if (Vap.isAddress(urlTail)){
         this.setState({ targetAccount: urlTail });
         return;
       }
@@ -88,17 +88,17 @@ class FaucetRequest extends Component {
       if (typeof window.web3 === "undefined") {
         // Listen for provider injection
         window.addEventListener("message", ({ data }) => {
-          if (data && data.type && data.type === "ETHEREUM_PROVIDER_SUCCESS") {
-            this.eth = new Eth(window.ethereum);
+          if (data && data.type && data.type === "VAPORY_PROVIDER_SUCCESS") {
+            this.vap = new Vap(window.vapory);
           }
         });
         // Request provider
-        window.postMessage({ type: "ETHEREUM_PROVIDER_REQUEST" }, "*");
+        window.postMessage({ type: "VAPORY_PROVIDER_REQUEST" }, "*");
       }
       // If web3 is injected (legacy browsers)...
       else {
-        this.eth = new Eth(window.web3.currentProvider);
-        this.eth
+        this.vap = new Vap(window.web3.currentProvider);
+        this.vap
           .accounts()
           .then(accounts => {
             if (accounts && accounts[0]) {
@@ -118,13 +118,13 @@ class FaucetRequest extends Component {
             <form onSubmit={this.handleSubmit}>
               <div className="field">
                 <label className="label">
-                  Enter your testnet account address
+                  Enter your vapory account address
                 </label>
                 <div className="control">
                   <input
                     className="input is-primary"
                     type="text"
-                    placeholder="Enter your testnet account address"
+                    placeholder="Enter your vapory account address"
                     value={this.state.targetAccount}
                     onChange={this.handleChange}
                   />
@@ -136,7 +136,7 @@ class FaucetRequest extends Component {
                     disabled={this.state.requestrunning}
                     className="button is-link"
                   >
-                    Send me test Ether
+                    Send me Vapor
                   </button>
                 </div>
               </div>
@@ -151,12 +151,12 @@ class FaucetRequest extends Component {
                 onClick={this.clearMessages}
               >
                 <div className="message-body">
-                  <p>Test ETH sent to {this.state.faucetresponse.address}.</p>
+                  <p>VAP sent to {this.state.faucetresponse.address}.</p>
                   <p>
                     Transaction hash{" "}
                     <a
                       target="_new"
-                      href={this.state.faucetresponse.etherscanlink}
+                      href={this.state.faucetresponse.vaporscanlink}
                     >
                       {this.state.faucetresponse.txhash}
                     </a>

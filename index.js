@@ -1,18 +1,18 @@
 var express = require("express");
 var app = express();
 var cors = require("cors");
-var Web3 = require("web3");
-var HookedWeb3Provider = require("hooked-web3-provider");
-var lightwallet = require("eth-lightwallet");
+var Web3 = require("@vapory/web3");
+var HookedWeb3Provider = require("@vapory/hooked-web3-provider");
+var lightwallet = require("vap-lightwallet");
 var config = require("./config.json");
 const mkdirp = require("mkdirp");
 const level = require("level");
 
-mkdirp.sync(require("os").homedir() + "/.ethfaucetssl/queue");
-mkdirp.sync(require("os").homedir() + "/.ethfaucetssl/exceptions");
-const dbQueue = level(require("os").homedir() + "/.ethfaucetssl/queue");
+mkdirp.sync(require("os").homedir() + "/.vapfaucetssl/queue");
+mkdirp.sync(require("os").homedir() + "/.vapfaucetssl/exceptions");
+const dbQueue = level(require("os").homedir() + "/.vapfaucetssl/queue");
 const dbExceptions = level(
-  require("os").homedir() + "/.ethfaucetssl/exceptions"
+  require("os").homedir() + "/.vapfaucetssl/exceptions"
 );
 const greylistduration = 1000 * 60 * 60 * 24;
 
@@ -20,7 +20,7 @@ var faucet_keystore = JSON.stringify(require("./wallet.json"));
 
 var secretSeed = lightwallet.keystore.generateRandomSeed();
 
-// check for valid Eth address
+// check for valid Vap address
 function isAddress(address) {
   return /^(0x)?[0-9a-f]{40}$/i.test(address);
 }
@@ -51,7 +51,7 @@ lightwallet.keystore.deriveKeyFromPassword(config.walletpwd, function(
 ) {
   var keystore = new lightwallet.keystore.deserialize(faucet_keystore);
 
-  console.log("connecting to ETH node: ", config.web3.host);
+  console.log("connecting to VAP node: ", config.web3.host);
 
   var web3Provider = new HookedWeb3Provider({
     host: config.web3.host,
@@ -82,12 +82,12 @@ lightwallet.keystore.deriveKeyFromPassword(config.walletpwd, function(
   // https.createServer(options, app).listen(443);
 });
 
-// Get faucet balance in ether ( or other denomination if given )
+// Get faucet balance in vapor ( or other denomination if given )
 function getFaucetBalance(denomination) {
   return parseFloat(
     web3.fromWei(
-      web3.eth.getBalance(account).toNumber(),
-      denomination || "ether"
+      web3.vap.getBalance(account).toNumber(),
+      denomination || "vapor"
     )
   );
 }
@@ -101,18 +101,18 @@ app.use(express.static("static/build"));
 app.get("/faucetinfo", function(req, res) {
   var ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
   console.log("client IP=", ip);
-  var etherbalance = -1;
+  var vaporbalance = -1;
   try {
-    etherbalance = getFaucetBalance();
+    vaporbalance = getFaucetBalance();
   } catch (e) {
     console.log(e);
   }
   res.status(200).json({
     account: account,
-    balance: etherbalance,
-    etherscanroot: config.etherscanroot,
+    balance: vaporbalance,
+    vaporscanroot: config.vaporscanroot,
     payoutfrequencyinsec: config.payoutfrequencyinsec,
-    payoutamountinether: config.payoutamountinether,
+    payoutamountinvapor: config.payoutamountinvapor,
     queuesize: config.queuesize,
     queuename: "queue"
   });
@@ -280,7 +280,7 @@ function iterateQueue() {
             console.log("DONATE TO ", data.address);
             setDonatedNow();
             doDonation(data.address).then(txhash => {
-              console.log("sent ETH to ", data.address);
+              console.log("sent VAP to ", data.address);
               return resolve();
             });
           });
@@ -391,7 +391,7 @@ app.get("/donate/:address", function(req, res) {
                     var reply = {
                       address: address,
                       txhash: txhash,
-                      amount: config.payoutamountinether * 1e18
+                      amount: config.payoutamountinvapor * 1e18
                     };
                     return res.status(200).json(reply);
                   });
@@ -415,7 +415,7 @@ app.get("/donate/:address", function(req, res) {
                       var queueitem = {
                         paydate: paydate,
                         address: address,
-                        amount: config.payoutamountinether * 1e18
+                        amount: config.payoutamountinvapor * 1e18
                       };
                       return res.status(200).json(queueitem);
                     });
@@ -439,11 +439,11 @@ app.get("/donate/:address", function(req, res) {
 });
 
 function donate(to, cb) {
-  web3.eth.getGasPrice(function(err, result) {
+  web3.vap.getGasPrice(function(err, result) {
     var gasPrice = result.toNumber(10);
     console.log("gasprice is ", gasPrice);
 
-    var amount = config.payoutamountinether * 1e18;
+    var amount = config.payoutamountinvapor * 1e18;
     console.log("Transferring ", amount, "wei from", account, "to", to);
 
     var options = {
@@ -454,7 +454,7 @@ function donate(to, cb) {
       gasPrice: gasPrice
     };
     console.log(options);
-    web3.eth.sendTransaction(options, function(err, result) {
+    web3.vap.sendTransaction(options, function(err, result) {
       if (err != null) {
         console.log(err);
         console.log("ERROR: Transaction didn't go through. See console.");
