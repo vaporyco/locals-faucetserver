@@ -1,5 +1,5 @@
 const config = {
-  apiurl: "http://localhost:3008",
+  apiurl: "https://faucet.vapory.org",
   vaporscanroot: "https://vaporscan.com"
 };
 
